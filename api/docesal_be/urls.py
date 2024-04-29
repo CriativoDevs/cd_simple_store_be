@@ -4,8 +4,8 @@ from django.urls import path
 
 urlpatterns = [
     path("", views.getRoutes, name="getRoutes"),
-    path("products/", views.getProducts, name="getProducts"),
-    path("product/<str:pk>/", views.getProduct, name="getProduct"),
+    path("products/", views.ProductList.as_view(), name="product-list"),
+    path("product/<int:pk>/", views.ProductDetail.as_view(), name="product-detail"),
     path(
         "users/login/", views.MyTokenObtainPairView.as_view(), name="token_obtain_pair"
     ),
@@ -23,5 +23,7 @@ urlpatterns = [
         name="token_verify",
     ),
     path("users/token/refresh/", views.refresh_token, name="token_refresh"),
-    path("users/refresh-token/", views.TokenRefreshView.as_view(), name="refresh_token"),
+    path(
+        "users/refresh-token/", views.TokenRefreshView.as_view(), name="refresh_token"
+    ),
 ]

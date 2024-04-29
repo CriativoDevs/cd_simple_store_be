@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework import status, views
+from rest_framework import status, views, generics, viewsets, filters
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,6 +17,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.conf import settings
 from django.views.generic import View
+from django.db.models import Q
 
 import jwt
 import time
@@ -137,18 +138,34 @@ def getRoutes(request):
     return Response("Hello")
 
 
-@api_view(["GET"])
-def getProducts(request):
-    products = Product.objects.all()
-    serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
+class ProductList(generics.ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["product_name", "product_brand", "product_description"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.query_params.get("search", None)
+        if search_term:
+            queryset = queryset.filter(
+                Q(product_name__icontains=search_term)
+                | Q(product_brand__icontains=search_term)
+                | Q(product_description__icontains=search_term)
+            )
+        return queryset
 
 
-@api_view(["GET"])
-def getProduct(request, pk):
-    product = Product.objects.get(_id=pk)
-    serializer = ProductSerializer(product, many=False)
-    return Response(serializer.data)
+class ProductDetail(generics.RetrieveAPIView):
+    def get(self, request, pk):
+        try:
+            product = Product.objects.get(pk=pk)
+            serializer = ProductSerializer(product)
+            return Response(serializer.data)
+        except Product.DoesNotExist:
+            return Response(
+                {"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 @api_view(["POST"])
