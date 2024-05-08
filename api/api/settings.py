@@ -40,6 +40,7 @@ ALLOWED_HOSTS = []
 
 # Domain for email activation
 HOST_URL = "127.0.0.1:8000"
+HOST_FE_URL = "http://localhost:3000/#"
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

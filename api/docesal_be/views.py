@@ -18,6 +18,7 @@ from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeEr
 from django.conf import settings
 from django.views.generic import View
 from django.db.models import Q
+from django.contrib.auth.tokens import default_token_generator
 
 import jwt
 import time
@@ -168,52 +169,48 @@ class ProductDetail(generics.RetrieveAPIView):
             )
 
 
-@api_view(["POST"])
-def registerUser(request):
-    data = request.data
-    try:
-        user = User.objects.create(
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            username=data["email"],
-            email=data["email"],
-            password=make_password(data["password"]),
-            is_active=False,
-        )
+class RegisterUser(views.APIView):
+    def post(self, request):
+        data = request.data
+        try:
+            user = User.objects.create(
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                username=data["email"],
+                email=data["email"],
+                password=make_password(data["password"]),
+                is_active=False,
+            )
 
-        # Will be here for and when I got a good email service
-        # generate token for sending mail
-        email_subject = "Activate your account"
-        uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
-        token = generate_token.make_token(user)
-        message = render_to_string(
-            "activate.html",
-            {
-                "user": user,
-                "domain": settings.HOST_URL,
-                "uid": uid,
-                "token": token,
-            },
-        )
+            email_subject = "Activate your account"
+            uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
+            token = generate_token.make_token(user)
+            message = render_to_string(
+                "activate.html",
+                {
+                    "user": user,
+                    "domain": settings.HOST_URL,
+                    "uid": uid,
+                    "token": token,
+                },
+            )
 
-        email_message = EmailMessage(
-            email_subject,
-            message,
-            settings.EMAIL_HOST_USER,
-            [data["email"]],
-        )
+            email_message = EmailMessage(
+                email_subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [data["email"]],
+            )
 
-        EmailThread(email_message).start()
+            EmailThread(email_message).start()
 
-        activation_message = {"detail": "Check your email for activation link"}
+            activation_message = {"detail": "Check your email for activation link"}
 
-        return Response(activation_message, status=status.HTTP_201_CREATED)
+            return Response(activation_message, status=status.HTTP_201_CREATED)
 
-        # serialize = UserSerializerWithToken(user, many=False)
-        # return Response(serialize.data)
-    except Exception as e:
-        message = {"detail": "User with this email already exists"}
-        return Response(message, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            message = {"detail": "User with this email already exists"}
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ActivateAccountView(View):
@@ -230,3 +227,53 @@ class ActivateAccountView(View):
             return render(request, "activatesuccess.html", message)
         else:
             return render(request, "activatefail.html")
+
+
+class PasswordResetRequestView(views.APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        user = User.objects.filter(email=email).first()
+        if user:
+            token = default_token_generator.make_token(user)
+            uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
+            reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
+            print(reset_link)
+
+            context = {
+                "user": user,
+                "link": reset_link,
+            }
+
+            message = render_to_string("password_reset.html", context)
+            email_subject = "Password Reset Request"
+            email_message = EmailMessage(
+                email_subject, message, settings.EMAIL_HOST_USER, [email]
+            )
+
+            EmailThread(email_message).start()
+
+            return Response(
+                {"detail": "Password reset email sent."}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PasswordResetConfirmView(views.APIView):
+    def post(self, request):
+        password = request.data.get("password")
+        token = request.data.get("token")
+        email = request.data.get("email")
+        user = User.objects.filter(email=email).first()
+        if user and default_token_generator.check_token(user, token):
+            user.set_password(password)
+            user.save()
+            return Response(
+                {"detail": "Password has been reset."}, status=status.HTTP_200_OK
+            )
+        return Response(
+            {"detail": "Invalid token or user does not exist."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
