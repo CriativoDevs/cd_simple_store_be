@@ -266,8 +266,18 @@ class PasswordResetConfirmView(views.APIView):
         password = request.data.get("password")
         token = request.data.get("token")
         email = request.data.get("email")
+        breakpoint()
+        if not token or not email:
+            return Response(
+                {"detail": f"{email or token} not received"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         user = User.objects.filter(email=email).first()
-        if user and default_token_generator.check_token(user, token):
+        if user is None:
+            return Response(
+                {"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        if default_token_generator.check_token(user, token):
             user.set_password(password)
             user.save()
             return Response(
