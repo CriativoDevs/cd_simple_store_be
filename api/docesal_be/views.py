@@ -266,7 +266,6 @@ class PasswordResetConfirmView(views.APIView):
         password = request.data.get("password")
         token = request.data.get("token")
         email = request.data.get("email")
-        breakpoint()
         if not token or not email:
             return Response(
                 {"detail": f"{email or token} not received"},
