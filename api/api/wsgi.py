@@ -13,7 +13,7 @@ import sys
 from django.core.wsgi import get_wsgi_application
 
 # Path to your project directory
-path = "/home/criativodevs/docesal_be"
+path = "/home/criativodevs/cd_simple_store_be/api/"
 if path not in sys.path:
     sys.path.append(path)
 
