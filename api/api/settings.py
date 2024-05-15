@@ -36,7 +36,7 @@ SECRET_KEY = "django-insecure-oso4637)!gq+xl@vjhp_8rn566##q8!jjwu-@kk&7xh9r3*h^7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", "criativodevs.pythonanywhere.com"]
 
 # Domain for email activation
 HOST_URL = "127.0.0.1:8000"
