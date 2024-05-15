@@ -39,7 +39,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*", "criativodevs.pythonanywhere.com"]
 
 # Domain for email activation
-HOST_URL = "127.0.0.1:8000"
+HOST_URL = ["127.0.0.1:8000", "criativodevs.pythonanywhere.com"]
 HOST_FE_URL = "http://localhost:3000/#"
 
 # Email settings
