@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework import status, views, generics, viewsets, filters
+from rest_framework import status, views, generics, filters
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -27,8 +27,10 @@ from .models import Product
 from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
 from .utils import generate_token, TokenGenerator
 
-
 import threading
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class TokenRefreshView(views.APIView):
@@ -286,3 +288,40 @@ class PasswordResetConfirmView(views.APIView):
             {"detail": "Invalid token or user does not exist."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class CreateCheckoutSession(views.APIView):
+    def post(self, request, *args, **kwargs):
+        YOUR_DOMAIN = settings.HOST_FE_URL
+        try:
+            cart_items = request.data.get("cartItems", [])
+            print("Cart Items:", cart_items)
+
+            line_items = []
+            for item in cart_items:
+                # Ensure price is properly formatted
+                unit_amount = int(float(item["price"]) * 100)
+
+                line_items.append(
+                    {
+                        "price_data": {
+                            "currency": "eur",
+                            "product_data": {
+                                "name": item["name"],
+                            },
+                            "unit_amount": unit_amount,
+                        },
+                        "quantity": item["qty"],
+                    }
+                )
+
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=line_items,
+                mode="payment",
+                success_url=f"{YOUR_DOMAIN}/success",
+                cancel_url=f"{YOUR_DOMAIN}/cancel",
+            )
+            return Response({"id": checkout_session.id}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

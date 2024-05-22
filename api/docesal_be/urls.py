@@ -36,4 +36,6 @@ urlpatterns = [
     path(
         "users/refresh-token/", views.TokenRefreshView.as_view(), name="refresh_token"
     ),
+    # Stripe
+    path("create-checkout-session/", views.CreateCheckoutSession.as_view()),
 ]
