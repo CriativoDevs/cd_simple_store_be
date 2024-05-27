@@ -290,38 +290,20 @@ class PasswordResetConfirmView(views.APIView):
         )
 
 
-class CreateCheckoutSession(views.APIView):
+class CreatePaymentIntent(views.APIView):
     def post(self, request, *args, **kwargs):
-        YOUR_DOMAIN = settings.HOST_FE_URL
         try:
             cart_items = request.data.get("cartItems", [])
-            print("Cart Items:", cart_items)
-
-            line_items = []
-            for item in cart_items:
-                # Ensure price is properly formatted
-                unit_amount = int(float(item["price"]) * 100)
-
-                line_items.append(
-                    {
-                        "price_data": {
-                            "currency": "eur",
-                            "product_data": {
-                                "name": item["name"],
-                            },
-                            "unit_amount": unit_amount,
-                        },
-                        "quantity": item["qty"],
-                    }
-                )
-
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                line_items=line_items,
-                mode="payment",
-                success_url=f"{YOUR_DOMAIN}/success",
-                cancel_url=f"{YOUR_DOMAIN}/cancel",
+            print("CART ITEMS", cart_items)
+            amount = sum(
+                int(float(item["price"]) * 100) * item["qty"] for item in cart_items
             )
-            return Response({"id": checkout_session.id}, status=status.HTTP_200_OK)
+            print("AMOUNT", amount)
+            intent = stripe.PaymentIntent.create(
+                amount=amount,
+                currency="eur",
+            )
+            print("INTENT", intent)
+            return Response({"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
