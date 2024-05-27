@@ -294,16 +294,15 @@ class CreatePaymentIntent(views.APIView):
     def post(self, request, *args, **kwargs):
         try:
             cart_items = request.data.get("cartItems", [])
-            print("CART ITEMS", cart_items)
             amount = sum(
                 int(float(item["price"]) * 100) * item["qty"] for item in cart_items
             )
-            print("AMOUNT", amount)
             intent = stripe.PaymentIntent.create(
                 amount=amount,
                 currency="eur",
             )
-            print("INTENT", intent)
-            return Response({"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK)
+            return Response(
+                {"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK
+            )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
