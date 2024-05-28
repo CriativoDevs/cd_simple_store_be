@@ -120,20 +120,29 @@ class TokenVerificationView(views.APIView):
         return Response({"detail": "Token is valid"}, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def getUserProfile(request):
-    user = request.user
-    serializer = UserSerializer(user, many=False)
-    return Response(serializer.data)
+class GetUserProfile(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user, many=False)
+        return Response(serializer.data)
+
+    def put(self, request):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
 
 
-@api_view(["GET"])
-@permission_classes([IsAdminUser])
-def getUsers(request):
-    user = User.objects.all().order_by("-id")
-    serializer = UserSerializer(user, many=True)
-    return Response(serializer.data)
+
+class GetUsers(generics.ListAPIView):
+    queryset = User.objects.all().order_by("-id")
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+
 
 
 @api_view(["GET"])
