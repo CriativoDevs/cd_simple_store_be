@@ -30,14 +30,21 @@ from .utils import generate_token, TokenGenerator
 import threading
 import stripe
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class TokenRefreshView(views.APIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [
+        JWTAuthentication,
+    ]
 
     def post(self, request):
         refresh_token = request.data.get("refresh")
+        print("REFRESH: ", refresh_token)
 
         if not refresh_token:
             return Response(
@@ -47,11 +54,15 @@ class TokenRefreshView(views.APIView):
 
         try:
             refresh = RefreshToken(refresh_token)
+            print("REFRESH: ", refresh)
             access_token = str(refresh.access_token)
+
+            print("ACCESS: ", access_token)
             return Response({"access_token": access_token}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
-                {"error": "Invalid refresh token"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Invalid refresh token: {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -113,7 +124,9 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 class TokenVerificationView(views.APIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [
+        JWTAuthentication,
+    ]
 
     def get(self, request):
         # Token is verified by the authentication_classes
@@ -121,28 +134,30 @@ class TokenVerificationView(views.APIView):
 
 
 class GetUserProfile(views.APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def get(self, request):
         user = request.user
+        token = request.headers.get("Authorization")
         serializer = UserSerializer(user, many=False)
         return Response(serializer.data)
 
     def put(self, request):
         user = request.user
         serializer = UserSerializer(user, data=request.data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
-
 
 
 class GetUsers(generics.ListAPIView):
     queryset = User.objects.all().order_by("-id")
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
-
 
 
 @api_view(["GET"])

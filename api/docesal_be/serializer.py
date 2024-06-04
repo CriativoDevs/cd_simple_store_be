@@ -38,11 +38,11 @@ class UserSerializer(serializers.ModelSerializer):
         first_name = obj.first_name
         last_name = obj.last_name
         name = first_name + " " + last_name
-        if name == "":
+        if name.strip() == "":
             name = obj.email
 
         return name
-    
+
     def update(self, instance, validated_data):
         profile_data = validated_data.pop("profile", {})
         profile = instance.profile
@@ -53,10 +53,13 @@ class UserSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get("last_name", instance.last_name)
         instance.save()
 
-        profile.phone_number = profile_data.get("phone_number", profile.phone_number)
-        profile.address1 = profile_data.get("address1", profile.address1)
-        profile.address2 = profile_data.get("address2", profile.address2)
-        profile.save()
+        if profile_data:
+            profile.phone_number = profile_data.get(
+                "phone_number", profile.phone_number
+            )
+            profile.address1 = profile_data.get("address1", profile.address1)
+            profile.address2 = profile_data.get("address2", profile.address2)
+            profile.save()
 
         return instance
 
