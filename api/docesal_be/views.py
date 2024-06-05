@@ -8,7 +8,7 @@ from rest_framework import status, views, generics, filters
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.template.loader import render_to_string
@@ -23,7 +23,7 @@ from django.contrib.auth.tokens import default_token_generator
 import jwt
 import time
 
-from .models import Product
+from .models import Product, Purchase
 from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
 from .utils import generate_token, TokenGenerator
 
@@ -170,6 +170,7 @@ class ProductList(generics.ListAPIView):
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["product_name", "product_brand", "product_description"]
+    permission_classes = []
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -315,8 +316,17 @@ class PasswordResetConfirmView(views.APIView):
 
 
 class CreatePaymentIntent(views.APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         try:
+            user = request.user
+            if not user.is_authenticated:
+                return Response(
+                    {"error": "User is not authenticated"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
             cart_items = request.data.get("cartItems", [])
             amount = sum(
                 int(float(item["price"]) * 100) * item["qty"] for item in cart_items
@@ -325,8 +335,29 @@ class CreatePaymentIntent(views.APIView):
                 amount=amount,
                 currency="eur",
             )
+
+            for item in cart_items:
+                product = get_object_or_404(Product, _id=item["product"])
+                Purchase.objects.create(
+                    user=user,
+                    product=product,
+                    quantity=item["qty"],
+                    was_bought=True,                    
+                )
+
             return Response(
                 {"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_purchase_status(request, product_id):
+    user = request.user
+    product = get_object_or_404(Product, _id=product_id)
+    has_bought = Purchase.objects.filter(
+        user=user, product=product, was_bought=True
+    ).exists()
+    return Response({"has_bought": has_bought})

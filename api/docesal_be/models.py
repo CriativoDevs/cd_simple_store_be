@@ -32,3 +32,16 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class Purchase(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    _id = models.AutoField(primary_key=True, editable=False)
+    was_bought = models.BooleanField(default=False)
+    quantity = models.IntegerField()
+    date_to_be_delivered = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} bought {self.product.product_name}"

@@ -7,6 +7,11 @@ urlpatterns = [
     path("products/", views.ProductList.as_view(), name="product-list"),
     path("product/<int:pk>/", views.ProductDetail.as_view(), name="product-detail"),
     path(
+        "check-purchase-status/<int:product_id>/",
+        views.check_purchase_status,
+        name="check-purchase-status",
+    ),
+    path(
         "users/login/", views.MyTokenObtainPairView.as_view(), name="token_obtain_pair"
     ),
     path("users/profile/", views.GetUserProfile.as_view(), name="getUserProfile"),

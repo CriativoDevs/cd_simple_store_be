@@ -36,10 +36,10 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", "criativodevs.pythonanywhere.com"]
+ALLOWED_HOSTS = ["*"]
 
 # Domain for email activation
-HOST_URL = ["127.0.0.1:8000", "criativodevs.pythonanywhere.com"]
+HOST_URL = ["127.0.0.1:8000"]
 HOST_FE_URL = "http://localhost:3000/#"
 
 # Email settings
@@ -83,6 +83,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
 }
 
