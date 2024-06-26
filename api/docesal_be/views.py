@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework import status, views, generics, filters
+from rest_framework import status, views, generics, filters, pagination
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -169,6 +169,7 @@ class ProductList(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter]
+    pagination_class = pagination.PageNumberPagination
     search_fields = ["product_name", "product_brand", "product_description"]
     permission_classes = []
 
@@ -342,7 +343,7 @@ class CreatePaymentIntent(views.APIView):
                     user=user,
                     product=product,
                     quantity=item["qty"],
-                    was_bought=True,                    
+                    was_bought=True,
                 )
 
             return Response(
