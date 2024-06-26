@@ -25,7 +25,12 @@ import time
 
 from .models import Product, Purchase
 from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
-from .utils import generate_token, TokenGenerator
+from .utils import (
+    generate_token,
+    TokenGenerator,
+    send_email_with_pdf,
+    generate_purchase_pdf,
+)
 
 import threading
 import stripe
@@ -345,6 +350,12 @@ class CreatePaymentIntent(views.APIView):
                     quantity=item["qty"],
                     was_bought=True,
                 )
+
+            # Generate the PDF
+            pdf_buffer = generate_purchase_pdf(user, cart_items)
+
+            # Send email with PDF
+            send_email_with_pdf(user.email, pdf_buffer)
 
             return Response(
                 {"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK
