@@ -19,6 +19,7 @@ from django.conf import settings
 from django.views.generic import View
 from django.db.models import Q
 from django.contrib.auth.tokens import default_token_generator
+from django.http import HttpResponse
 
 import jwt
 import time
@@ -40,6 +41,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def log_entry(request):
+    logger.debug("This is a debug message")
+    logger.info("This is an info message")
+    logger.warning("This is a warning message")
+    logger.error("This is an error message")
+    logger.critical("This is a critical message")
+    # Your view logic here
+    return HttpResponse("Logging example")
 
 
 class TokenRefreshView(views.APIView):

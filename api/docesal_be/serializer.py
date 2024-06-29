@@ -1,9 +1,11 @@
-from .models import Product, UserProfile
+from .models import Product, UserProfile, LogEntry
 
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth.models import User
+
+import logging
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -74,3 +76,13 @@ class UserSerializerWithToken(UserSerializer):
     def get_token(self, obj):
         token = RefreshToken.for_user(obj)
         return str(token.access_token)
+
+
+class DatabaseLogHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = LogEntry(
+            level=record.levelname,
+            message=record.getMessage(),
+            module=record.module,
+        )
+        log_entry.save()

@@ -21,6 +21,8 @@ load_dotenv()
 import django
 from django.utils.encoding import force_str
 
+from .logging_config import LOGGING
+
 django.utils.encoding.force_text = force_str
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,11 +41,17 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Logging
+LOGGING = LOGGING
+
 ALLOWED_HOSTS = ["*", "http://criativo.pythonanywhere.com/"]
 
 # Domain for email activation
 HOST_URL = ["127.0.0.1:8000", "http://criativo.pythonanywhere.com/"]
-HOST_FE_URL = ["http://localhost:3000/#", "https://cdsimplestorefe-production.up.railway.app/"]
+HOST_FE_URL = [
+    "http://localhost:3000/#",
+    "https://cdsimplestorefe-production.up.railway.app/",
+]
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

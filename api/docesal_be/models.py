@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import logging
 
 
 class Product(models.Model):
@@ -45,3 +46,24 @@ class Purchase(models.Model):
 
     def __str__(self):
         return f"{self.user.username} bought {self.product.product_name}"
+
+
+logger = logging.getLogger(__name__)
+
+
+class LogEntry(models.Model):
+    LEVEL_CHOICES = [
+        ("DEBUG", "Debug"),
+        ("INFO", "Info"),
+        ("WARNING", "Warning"),
+        ("ERROR", "Error"),
+        ("CRITICAL", "Critical"),
+    ]
+
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES)
+    message = models.TextField()
+    module = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.level} - {self.module} - {self.message}"
