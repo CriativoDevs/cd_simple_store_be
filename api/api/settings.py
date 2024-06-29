@@ -43,7 +43,7 @@ ALLOWED_HOSTS = ["*", "http://criativo.pythonanywhere.com/"]
 
 # Domain for email activation
 HOST_URL = ["127.0.0.1:8000", "http://criativo.pythonanywhere.com/"]
-HOST_FE_URL = "http://localhost:3000/#"
+HOST_FE_URL = ["http://localhost:3000/#", "https://cdsimplestorefe-production.up.railway.app/"]
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
