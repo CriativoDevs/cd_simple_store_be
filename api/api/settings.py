@@ -21,8 +21,6 @@ load_dotenv()
 import django
 from django.utils.encoding import force_str
 
-from .logging_config import LOGGING
-
 django.utils.encoding.force_text = force_str
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,9 +38,6 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-# Logging
-LOGGING = LOGGING
 
 ALLOWED_HOSTS = ["*", "http://criativo.pythonanywhere.com/"]
 
