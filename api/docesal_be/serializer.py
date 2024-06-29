@@ -45,7 +45,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop("profile", {})
-        profile = instance.profile
+
+        if not hasattr(instance, "profile"):
+            profile = UserProfile(user=instance)
+            profile.save()
+        else:
+            profile = instance.profile
 
         instance.username = validated_data.get("username", instance.username)
         instance.email = validated_data.get("email", instance.email)
