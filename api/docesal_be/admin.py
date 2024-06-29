@@ -5,6 +5,7 @@ from .models import Product, UserProfile, Purchase, LogEntry
 admin.site.register(Product)
 admin.site.register(UserProfile)
 admin.site.register(Purchase)
+admin.site.register(LogEntry)
 
 
 @admin.register(LogEntry)
