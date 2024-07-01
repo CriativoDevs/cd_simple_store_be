@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework import status, views, generics, filters, pagination, viewsets
+from rest_framework import status, views, generics, filters, pagination
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -23,13 +23,8 @@ from django.contrib.auth.tokens import default_token_generator
 import jwt
 import time
 
-from .models import Product, Purchase, UserProfile
-from .serializer import (
-    ProductSerializer,
-    UserSerializer,
-    UserSerializerWithToken,
-    UserProfileSerializer,
-)
+from .models import Product, Purchase
+from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
 from .utils import (
     generate_token,
     TokenGenerator,
@@ -143,45 +138,25 @@ class TokenVerificationView(views.APIView):
         return Response({"detail": "Token is valid"}, status=status.HTTP_200_OK)
 
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return UserProfile.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
 class GetUserProfile(views.APIView):
     permission_classes = [
         IsAuthenticated,
     ]
 
     def get(self, request):
-        try:
-            user = request.user
-            token = request.headers.get("Authorization")
-            serializer = UserSerializer(user, many=False)
-            return Response(serializer.data)
-        except UserProfile.DoesNotExist:
-            return Response(
-                {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+        user = request.user
+        token = request.headers.get("Authorization")
+        serializer = UserSerializer(user, many=False)
+        return Response(serializer.data)
 
     def put(self, request):
-        try:
-            profile = request.user.profile
-        except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(user=request.user)
-            profile.save()
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
 
-        serializer = UserSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
 
 
 class GetUsers(generics.ListAPIView):
