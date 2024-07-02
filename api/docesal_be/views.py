@@ -371,15 +371,15 @@ class CreatePaymentIntent(views.APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            try:
-                # Send email with PDF
-                send_email_with_pdf(user.email, pdf_buffer)
-            except Exception as e:
-                logger.error(f"Error sending email: {str(e)}")
-                return Response(
-                    {"error": f"Error sending email: {str(e)}"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            # try:
+            #     # Send email with PDF
+            #     send_email_with_pdf(user.email, pdf_buffer)
+            # except Exception as e:
+            #     logger.error(f"Error sending email: {str(e)}")
+            #     return Response(
+            #         {"error": f"Error sending email: {str(e)}"},
+            #         status=status.HTTP_400_BAD_REQUEST,
+            #     )
 
             return Response(
                 {"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK
