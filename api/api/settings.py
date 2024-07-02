@@ -219,3 +219,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Stripe
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+
+if not STRIPE_SECRET_KEY or not STRIPE_PUBLISHABLE_KEY:
+    raise ValueError("Stripe API keys are not set properly in environment variables")
+
+
+print("Stripe Secret Key: ", STRIPE_SECRET_KEY)
+print("Stripe Publishable Key: ", STRIPE_PUBLISHABLE_KEY)

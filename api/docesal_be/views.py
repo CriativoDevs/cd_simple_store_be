@@ -337,30 +337,55 @@ class CreatePaymentIntent(views.APIView):
             amount = sum(
                 int(float(item["price"]) * 100) * item["qty"] for item in cart_items
             )
+
+            logger.info(f"Stripe Secret Key: {settings.STRIPE_SECRET_KEY}")
+            logger.info(f"Amount to be charged (in cents): {amount}")
+
             intent = stripe.PaymentIntent.create(
                 amount=amount,
                 currency="eur",
             )
 
             for item in cart_items:
-                product = get_object_or_404(Product, _id=item["product"])
-                Purchase.objects.create(
-                    user=user,
-                    product=product,
-                    quantity=item["qty"],
-                    was_bought=True,
+                try:
+                    product = get_object_or_404(Product, _id=item["product"])
+                    Purchase.objects.create(
+                        user=user,
+                        product=product,
+                        quantity=item["qty"],
+                        was_bought=True,
+                    )
+                except Exception as e:
+                    logger.error(f"Error processing cart item: {item}, Error: {str(e)}")
+                    return Response(
+                        {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            try:
+                # Generate the PDF
+                pdf_buffer = generate_purchase_pdf(user, cart_items)
+            except Exception as e:
+                logger.error(f"Error generating PDF: {str(e)}")
+                return Response(
+                    {"error": f"Error generating PDF: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Generate the PDF
-            pdf_buffer = generate_purchase_pdf(user, cart_items)
-
-            # Send email with PDF
-            send_email_with_pdf(user.email, pdf_buffer)
+            try:
+                # Send email with PDF
+                send_email_with_pdf(user.email, pdf_buffer)
+            except Exception as e:
+                logger.error(f"Error sending email: {str(e)}")
+                return Response(
+                    {"error": f"Error sending email: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             return Response(
                 {"clientSecret": intent["client_secret"]}, status=status.HTTP_200_OK
             )
         except Exception as e:
+            logger.error(f"General error: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
