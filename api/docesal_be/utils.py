@@ -129,6 +129,9 @@ def send_email_with_pdf(user_email, pdf_buffer):
 
         server.quit()
         logger.info("Email sent successfully to {user_email}")
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error occurred: {str(e)}")
+        raise
     except Exception as e:
         logger.error(f"Failed to send email to {user_email}: {str(e)}")
         raise
