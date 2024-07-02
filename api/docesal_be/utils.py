@@ -95,12 +95,12 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 def send_email_with_pdf(user_email, pdf_buffer):
     try:
-        logger.info("Setting up email connection using SSL")
+        server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT) if EMAIL_USE_SSL else smtplib.SMTP(
+            EMAIL_HOST, EMAIL_PORT
+        )
 
-        server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT)
-        logger.info("SSL connection established")
+        logger.info("Email connection established")
 
-        logger.info("Logging in to the email server")
         server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
         logger.info("Logged in to the email server")
 
@@ -132,3 +132,4 @@ def send_email_with_pdf(user_email, pdf_buffer):
     except Exception as e:
         logger.error(f"Failed to send email to {user_email}: {str(e)}")
         raise
+
