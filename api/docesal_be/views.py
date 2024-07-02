@@ -355,7 +355,7 @@ class CreatePaymentIntent(views.APIView):
                         product=product,
                         quantity=item["qty"],
                         was_bought=True,
-                        created_at=datetime.now(),
+                        created_at=datetime.datetime.now(),
                     )
                 except Exception as e:
                     logger.error(f"Error processing cart item: {item}, Error: {str(e)}")
