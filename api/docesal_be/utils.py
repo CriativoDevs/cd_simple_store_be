@@ -1,15 +1,18 @@
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, get_connection
 from django.conf import settings
 
 import six
 import io
 import datetime
-import os
+import logging
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
+
+
+logger = logging.getLogger(__name__)
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -34,9 +37,11 @@ def generate_purchase_pdf(user, cart_items):
 
     # Greeting and Contact Info
     p.setFont("Helvetica", 12)
-    p.drawString(100, 580, "Thanks for purchasing with us. If you need anything, contact us.")
+    p.drawString(
+        100, 580, "Thanks for purchasing with us. If you need anything, contact us."
+    )
     p.drawString(100, 565, "Below you can see what you purchased.")
-    
+
     # Date
     now = datetime.datetime.now()
     p.drawString(100, 545, f"Date: {now.strftime('%d/%m/%Y %H:%M:%S')}")
@@ -75,11 +80,33 @@ def generate_purchase_pdf(user, cart_items):
 
 
 def send_email_with_pdf(user_email, pdf_buffer):
-    email = EmailMessage(
-        "CD Simple Store - Purchase Confirmation",
-        "Purchase Confirmation",
-        settings.EMAIL_HOST_USER,
-        [user_email],
-    )
-    email.attach("purchase_details.pdf", pdf_buffer.getvalue(), "application/pdf")
-    email.send()
+    try:
+        connection = get_connection(
+            backend=settings.EMAIL_BACKEND,
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=settings.EMAIL_HOST_USER,
+            password=settings.EMAIL_HOST_PASSWORD,
+            use_tls=settings.EMAIL_USE_TLS,
+            use_ssl=settings.EMAIL_USE_SSL,
+            timeout=settings.EMAIL_TIMEOUT,
+        )
+        connection.open()
+        email = EmailMessage(
+            "CD Simple Store - Purchase Confirmation",
+            "Purchase Confirmation",
+            settings.EMAIL_HOST_USER,
+            [user_email],
+            connection=connection,
+        )
+        email.attach("purchase_details.pdf", pdf_buffer.getvalue(), "application/pdf")
+        logger.info(f"Attempting to send email to {user_email}")
+
+        email.send()
+
+        logger.info("Email sent successfully to {user_email}")
+
+        connection.close()
+    except Exception as e:
+        logger.error(f"Failed to send email to {user_email}: {e}")
+        raise
