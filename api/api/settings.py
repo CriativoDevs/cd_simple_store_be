@@ -217,12 +217,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Stripe
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = "sk_test_51PHPJJ2NEMqZQFho0ST3Gv53gksX8PCcdr4yYaMeKIYsZWwwCm6bMlB6kw6dpOTWOdHqhUfmbkNUDMURCyhWcCnL00KMTT7VpW"
+STRIPE_PUBLISHABLE_KEY = "pk_test_51PHPJJ2NEMqZQFhoUE90mVmx8nh76ka74F9U2q1TFvS7liA4f5fhMbAF7AwAPpXQFkTZgviZkiRHySt4X6eNFKqu00elrWC2KZ"
 
 if not STRIPE_SECRET_KEY or not STRIPE_PUBLISHABLE_KEY:
     raise ValueError("Stripe API keys are not set properly in environment variables")
-
-
-print("Stripe Secret Key: ", STRIPE_SECRET_KEY)
-print("Stripe Publishable Key: ", STRIPE_PUBLISHABLE_KEY)
