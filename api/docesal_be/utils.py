@@ -100,13 +100,17 @@ def send_email_with_pdf(user_email, pdf_buffer):
         if EMAIL_USE_SSL:
             logger.info("Using SSL for email connection")
             server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT)
+            logger.info("SSL connection established")
         else:
             logger.info("Using TLS for email connection")
             server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+            logger.info("TLS connection established, starting TLS")
             server.starttls()
+            logger.info("TLS connection started")
 
         logger.info("Logging in to the email server")
         server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+        logger.info("Logged in to the email server")
 
         msg = MIMEMultipart()
         msg["From"] = EMAIL_HOST_USER
@@ -127,8 +131,9 @@ def send_email_with_pdf(user_email, pdf_buffer):
 
         server.send_message(msg)
 
+        logger.info("Email sent successfully")
         server.quit()
-        logger.info("Email sent successfully to {user_email}")
+        logger.info("Email connection closed")
     except smtplib.SMTPException as e:
         logger.error(f"SMTP error occurred: {str(e)}")
         raise
