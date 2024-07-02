@@ -48,7 +48,8 @@ HOST_FE_URL = [
     "https://cdsimplestorefe-production.up.railway.app/",
 ]
 
-# Email settingsEMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# Email settings
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 465
 EMAIL_USE_SSL = "true"
