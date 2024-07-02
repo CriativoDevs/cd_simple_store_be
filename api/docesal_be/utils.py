@@ -98,11 +98,14 @@ def send_email_with_pdf(user_email, pdf_buffer):
         logger.info("Setting up email connection")
 
         if EMAIL_USE_SSL:
+            logger.info("Using SSL for email connection")
             server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT)
         else:
+            logger.info("Using TLS for email connection")
             server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
             server.starttls()
 
+        logger.info("Logging in to the email server")
         server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
 
         msg = MIMEMultipart()
