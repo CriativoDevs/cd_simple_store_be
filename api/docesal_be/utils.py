@@ -1,11 +1,17 @@
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import EmailMessage, get_connection
-from django.conf import settings
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+
+from dotenv import load_dotenv
 
 import six
 import io
 import datetime
 import logging
+import smtplib
+import os
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -13,6 +19,7 @@ from reportlab.pdfgen import canvas
 
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -79,34 +86,47 @@ def generate_purchase_pdf(user, cart_items):
     return buffer
 
 
+# Email settings
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 465))
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false") == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+
 def send_email_with_pdf(user_email, pdf_buffer):
     try:
-        connection = get_connection(
-            backend=settings.EMAIL_BACKEND,
-            host=settings.EMAIL_HOST,
-            port=settings.EMAIL_PORT,
-            username=settings.EMAIL_HOST_USER,
-            password=settings.EMAIL_HOST_PASSWORD,
-            use_tls=settings.EMAIL_USE_TLS,
-            use_ssl=settings.EMAIL_USE_SSL,
-            timeout=settings.EMAIL_TIMEOUT,
+        logger.info("Setting up email connection")
+
+        if EMAIL_USE_SSL:
+            server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT)
+        else:
+            server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+            server.starttls()
+
+        server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+
+        msg = MIMEMultipart()
+        msg["From"] = EMAIL_HOST_USER
+        msg["To"] = user_email
+        msg["Subject"] = "CD Simple Store - Purchase Confirmation"
+
+        body = "Purchase Confirmation"
+        msg.attach(MIMEText(body, "plain"))
+
+        # Attach the PDF
+        attachment = MIMEApplication(pdf_buffer.getvalue(), _subtype="pdf")
+        attachment.add_header(
+            "Content-Disposition", "attachment", filename="purchase_details.pdf"
         )
-        connection.open()
-        email = EmailMessage(
-            "CD Simple Store - Purchase Confirmation",
-            "Purchase Confirmation",
-            settings.EMAIL_HOST_USER,
-            [user_email],
-            connection=connection,
-        )
-        email.attach("purchase_details.pdf", pdf_buffer.getvalue(), "application/pdf")
+        msg.attach(attachment)
+
         logger.info(f"Attempting to send email to {user_email}")
 
-        email.send()
+        server.send_message(msg)
 
+        server.quit()
         logger.info("Email sent successfully to {user_email}")
-
-        connection.close()
     except Exception as e:
-        logger.error(f"Failed to send email to {user_email}: {e}")
+        logger.error(f"Failed to send email to {user_email}: {str(e)}")
         raise
