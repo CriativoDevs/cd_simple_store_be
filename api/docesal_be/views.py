@@ -22,6 +22,7 @@ from django.contrib.auth.tokens import default_token_generator
 
 import jwt
 import time
+import datetime
 
 from .models import Product, Purchase
 from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
@@ -354,6 +355,7 @@ class CreatePaymentIntent(views.APIView):
                         product=product,
                         quantity=item["qty"],
                         was_bought=True,
+                        created_at=datetime.now(),
                     )
                 except Exception as e:
                     logger.error(f"Error processing cart item: {item}, Error: {str(e)}")
