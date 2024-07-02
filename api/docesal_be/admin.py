@@ -4,6 +4,7 @@ from .models import Product, UserProfile, Purchase
 
 class PurchaseAdmin(admin.ModelAdmin):
     list_display = ("user", "product", "quantity", "was_bought", "created_at")
+    readonly_fields = ("created_at",)
 
 
 # Register your models here.
