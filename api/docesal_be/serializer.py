@@ -11,6 +11,12 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = "__all__"
 
+    def get_product_image(self, obj):
+        request = self.context.get("request")
+        if obj.product_image and not obj.product_image.url.startswith("http"):
+            return request.build_absolute_uri(obj.product_image.url)
+        return obj.product_image.url
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
