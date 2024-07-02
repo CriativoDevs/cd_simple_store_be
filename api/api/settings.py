@@ -50,12 +50,12 @@ HOST_FE_URL = [
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 465
-EMAIL_USE_SSL = "true"
-EMAIL_HOST_USER = "ipizette@gmail.com"
-EMAIL_HOST_PASSWORD = "vzsxxkafaxezucet"
-EMAIL_TIMEOUT = 10
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 465))
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false") == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", 10))
 
 # Application definition
 
