@@ -72,7 +72,7 @@ def generate_purchase_pdf(user, cart_items):
 
     # Total Amount
     total_amount = sum(float(item["price"]) * item["qty"] for item in cart_items)
-    p.drawString(100, y - 20, f"Total: €{total_amount}")
+    p.drawString(100, y - 20, f"Total: € {total_amount}")
 
     p.showPage()
     p.save()
