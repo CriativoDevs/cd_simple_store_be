@@ -86,7 +86,7 @@ def generate_purchase_pdf(user, cart_items):
     return buffer
 
 
-def send_email_with_pdf(to_email, subject, body):
+def send_email_with_pdf(to_email, subject):
     try:
         # Set up the server
         server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
@@ -99,7 +99,7 @@ def send_email_with_pdf(to_email, subject, body):
         msg["From"] = settings.EMAIL_HOST_USER
         msg["To"] = to_email
         msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
+        msg.attach(MIMEText( "plain"))
 
         # Send the email
         server.sendmail(settings.EMAIL_HOST_USER, to_email, msg.as_string())
