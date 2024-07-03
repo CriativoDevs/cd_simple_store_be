@@ -1,4 +1,5 @@
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.conf import settings
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -85,51 +86,26 @@ def generate_purchase_pdf(user, cart_items):
     return buffer
 
 
-# Email settings
-EMAIL_HOST = os.getenv("EMAIL_HOST")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 465))
-EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false") == "true"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-
-
-def send_email_with_pdf(user_email, pdf_buffer):
+def send_email_with_pdf(to_email, subject, body):
     try:
-        server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT) if EMAIL_USE_SSL else smtplib.SMTP(
-            EMAIL_HOST, EMAIL_PORT
-        )
+        # Set up the server
+        server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        server.starttls()
+        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        print("Email connection established")
 
-        logger.info("Email connection established")
-
-        server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-        logger.info("Logged in to the email server")
-
+        # Create the email
         msg = MIMEMultipart()
-        msg["From"] = EMAIL_HOST_USER
-        msg["To"] = user_email
-        msg["Subject"] = "CD Simple Store - Purchase Confirmation"
-
-        body = "Purchase Confirmation"
+        msg["From"] = settings.EMAIL_HOST_USER
+        msg["To"] = to_email
+        msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain"))
 
-        # Attach the PDF
-        attachment = MIMEApplication(pdf_buffer.getvalue(), _subtype="pdf")
-        attachment.add_header(
-            "Content-Disposition", "attachment", filename="purchase_details.pdf"
-        )
-        msg.attach(attachment)
-
-        logger.info(f"Attempting to send email to {user_email}")
-
-        server.send_message(msg)
-
-        logger.info("Email sent successfully")
+        # Send the email
+        server.sendmail(settings.EMAIL_HOST_USER, to_email, msg.as_string())
+        print("Email sent successfully")
         server.quit()
-        logger.info("Email connection closed")
     except smtplib.SMTPException as e:
-        logger.error(f"SMTP error occurred: {str(e)}")
-        raise
+        print(f"SMTP error occurred: {e}")
     except Exception as e:
-        logger.error(f"Failed to send email to {user_email}: {str(e)}")
-        raise
-
+        print(f"Error sending email: {e}")
