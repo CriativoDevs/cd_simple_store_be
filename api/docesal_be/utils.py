@@ -64,7 +64,7 @@ def generate_purchase_pdf(user, cart_items):
     for item in cart_items:
         p.drawString(100, y, item["name"])
         p.drawString(250, y, str(item["qty"]))
-        p.drawString(350, y, f"€{item['price']}")
+        p.drawString(350, y, f"€ {item['price']}")
         y -= 20
 
     # Draw line
