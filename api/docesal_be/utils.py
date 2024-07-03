@@ -122,6 +122,6 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
 
 logger.info(f"EMAIL_HOST: {settings.EMAIL_HOST}")
 logger.info(f"EMAIL_PORT: {settings.EMAIL_PORT}")
-logger.info(f"EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}")
+logger.info(f"EMAIL_USE_SSL: {settings.EMAIL_USE_SSL}")
 logger.info(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
 logger.info(f"EMAIL_HOST_PASSWORD: {settings.EMAIL_HOST_PASSWORD}")
