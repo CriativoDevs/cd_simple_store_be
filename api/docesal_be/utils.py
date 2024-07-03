@@ -5,21 +5,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
-from dotenv import load_dotenv
-
 import six
 import io
 import datetime
 import logging
 import smtplib
-import os
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 
 logger = logging.getLogger(__name__)
-load_dotenv()
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -92,17 +88,19 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
             server = smtplib.SMTP_SSL(
                 settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=settings.EMAIL_TIMEOUT
             )
+            logger.info("SSL connection established", server)
         else:
             server = smtplib.SMTP(
                 settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=settings.EMAIL_TIMEOUT
             )
+            logger.info("Else SSL connection established", server)
             server.ehlo()
             if settings.EMAIL_USE_TLS:
                 server.starttls()
                 server.ehlo()
 
         server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-        logger.info("Email connection established")
+        print("Email connection established")
 
         # Create the email
         msg = MIMEMultipart()
@@ -112,21 +110,19 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
         msg.attach(MIMEText(body, "plain"))
 
         # Attach the PDF file
-        attach = MIMEApplication(pdf_buffer, _subtype="pdf")
-        attach.add_header(
-            "Content-Disposition", "attachment", filename="purchase_details.pdf"
-        )
+        attach = MIMEApplication(pdf_buffer.getvalue(), _subtype="pdf")
+        attach.add_header("Content-Disposition", "attachment", filename="receipt.pdf")
         msg.attach(attach)
-        logger.info("PDF attached successfully")
+        print("PDF attached successfully")
 
         # Send the email
         server.sendmail(settings.EMAIL_HOST_USER, to_email, msg.as_string())
-        logger.info("Email sent successfully")
+        print("Email sent successfully")
         server.quit()
     except smtplib.SMTPException as e:
-        logger.info(f"SMTP error occurred: {e}")
+        print(f"SMTP error occurred: {e}")
     except Exception as e:
-        logger.info(f"Error sending email: {e}")
+        print(f"Error sending email: {e}")
 
 
 logger.info(f"EMAIL_HOST: {settings.EMAIL_HOST}")
