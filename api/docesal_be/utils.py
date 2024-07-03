@@ -110,7 +110,12 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
         msg.attach(MIMEText(body, "plain"))
 
         # Attach the PDF file
-        pdf_bytes = bytes(pdf_buffer.getvalue())
+        try:
+            pdf_bytes = bytes(pdf_buffer.getvalue())
+        except Exception as e:
+            logger.error(f"Error converting PDF buffer to bytes: {e}")
+            raise
+
         logger.info(f"PDF buffer type: {type(pdf_bytes)}")  # Debug statement
         logger.info(f"PDF buffer length: {len(pdf_bytes)}")
         attach = MIMEApplication(pdf_bytes, _subtype="pdf")
