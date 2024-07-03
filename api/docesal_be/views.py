@@ -339,9 +339,6 @@ class CreatePaymentIntent(views.APIView):
                 int(float(item["price"]) * 100) * item["qty"] for item in cart_items
             )
 
-            logger.info(f"Stripe Secret Key: {settings.STRIPE_SECRET_KEY}")
-            logger.info(f"Amount to be charged (in cents): {amount}")
-
             intent = stripe.PaymentIntent.create(
                 amount=amount,
                 currency="eur",
@@ -373,8 +370,12 @@ class CreatePaymentIntent(views.APIView):
                 )
 
             try:
+                # Email details
+                subject = "Purchase Confirmation"
+                body = "Thank you for your purchase!"
+
                 # Send email with PDF
-                send_email_with_pdf(user.email, pdf_buffer)
+                send_email_with_pdf(user.email, subject, body, pdf_buffer)
             except Exception as e:
                 logger.error(f"Error sending email: {str(e)}")
                 return Response(

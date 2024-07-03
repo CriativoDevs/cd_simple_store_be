@@ -86,26 +86,32 @@ def generate_purchase_pdf(user, cart_items):
     return buffer
 
 
-def send_email_with_pdf(to_email, subject):
+def send_email_with_pdf(to_email, subject, body, pdf_buffer):
     try:
         # Set up the server
         server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
         server.starttls()
         server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-        print("Email connection established")
+        logger.info("Email connection established")
 
         # Create the email
         msg = MIMEMultipart()
         msg["From"] = settings.EMAIL_HOST_USER
         msg["To"] = to_email
         msg["Subject"] = subject
-        msg.attach(MIMEText( "plain"))
+        msg.attach(MIMEText(body, "plain"))
+
+        # Attach the PDF file
+        attach = MIMEApplication(pdf_buffer, _subtype="pdf")
+        attach.add_header("Content-Disposition", "attachment", filename="purchase_details.pdf")
+        msg.attach(attach)
+        logger.info("PDF attached successfully")
 
         # Send the email
         server.sendmail(settings.EMAIL_HOST_USER, to_email, msg.as_string())
-        print("Email sent successfully")
+        logger.info("Email sent successfully")
         server.quit()
     except smtplib.SMTPException as e:
-        print(f"SMTP error occurred: {e}")
+        logger.info(f"SMTP error occurred: {e}")
     except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.info(f"Error sending email: {e}")
