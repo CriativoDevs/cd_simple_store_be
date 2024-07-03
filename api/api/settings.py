@@ -13,9 +13,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 # for forcetext debug code
 import django
@@ -56,6 +58,12 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", 10))
+
+logger.info(f"SETTINGS: EMAIL_HOST: {EMAIL_HOST}")
+logger.info(f"SETTINGS: EMAIL_PORT: {EMAIL_PORT}")
+logger.info(f"SETTINGS: EMAIL_USE_TLS: {EMAIL_USE_TLS}")
+logger.info(f"SETTINGS: EMAIL_HOST_USER: {EMAIL_HOST_USER}")
+logger.info(f"SETTINGS: EMAIL_HOST_PASSWORD: {EMAIL_HOST_PASSWORD}")
 
 # Application definition
 
