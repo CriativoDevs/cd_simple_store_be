@@ -376,6 +376,7 @@ class CreatePaymentIntent(views.APIView):
 
                 # Send email with PDF
                 send_email_with_pdf(user.email, subject, body, pdf_buffer)
+                logger.info("Email sent to {}".format(user.email))
             except Exception as e:
                 logger.error(f"Error sending email: {str(e)}")
                 return Response(
