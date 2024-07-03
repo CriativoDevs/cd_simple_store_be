@@ -90,7 +90,9 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
     try:
         # Set up the server
         server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        server.ehlo()
         server.starttls()
+        server.ehlo()
         server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         logger.info("Email connection established")
 
@@ -103,7 +105,9 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
 
         # Attach the PDF file
         attach = MIMEApplication(pdf_buffer, _subtype="pdf")
-        attach.add_header("Content-Disposition", "attachment", filename="purchase_details.pdf")
+        attach.add_header(
+            "Content-Disposition", "attachment", filename="purchase_details.pdf"
+        )
         msg.attach(attach)
         logger.info("PDF attached successfully")
 
@@ -115,3 +119,9 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
         logger.info(f"SMTP error occurred: {e}")
     except Exception as e:
         logger.info(f"Error sending email: {e}")
+
+logger.info(f"EMAIL_HOST: {settings.EMAIL_HOST}")
+logger.info(f"EMAIL_PORT: {settings.EMAIL_PORT}")
+logger.info(f"EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}")
+logger.info(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
+logger.info(f"EMAIL_HOST_PASSWORD: {settings.EMAIL_HOST_PASSWORD}")
