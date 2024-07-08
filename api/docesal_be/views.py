@@ -355,23 +355,37 @@ class PasswordResetRequestView(views.APIView):
 
 class PasswordResetConfirmView(views.APIView):
     def post(self, request, uidb64, token):
-        password = request.data.get("password")
         try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
+            password = request.data.get("password")
+            if not password:
+                raise ValueError("Password not provided")
 
-        if user is not None and default_token_generator.check_token(user, token):
-            user.set_password(password)
-            user.save()
+            try:
+                uid = force_str(urlsafe_base64_decode(uidb64))
+                user = User.objects.get(pk=uid)
+                logger.info(f"User found: {user}")
+            except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
+                user = None
+                logger.error(f"Error decoding UID or user not found: {e}")
+
+            if user is not None and default_token_generator.check_token(user, token):
+                user.set_password(password)
+                user.save()
+                logger.info(f"Password has been reset for user: {user}")
+                return Response(
+                    {"detail": "Password has been reset."}, status=status.HTTP_200_OK
+                )
+            else:
+                logger.error("Invalid token or user does not exist.")
+                return Response(
+                    {"detail": "Invalid token or user does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        except Exception as e:
+            logger.error(f"Error in password reset confirmation: {e}")
             return Response(
-                {"detail": "Password has been reset."}, status=status.HTTP_200_OK
-            )
-        else:
-            return Response(
-                {"detail": "Invalid token or user does not exist."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": f"Error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST
             )
 
 
