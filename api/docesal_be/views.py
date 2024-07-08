@@ -12,13 +12,14 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError, force_str
 from django.conf import settings
 from django.views.generic import View
 from django.db.models import Q
 from django.contrib.auth.tokens import default_token_generator
+from django.urls import reverse
 
 import jwt
 import time
@@ -228,7 +229,7 @@ class RegisterUser(views.APIView):
             token = generate_token.make_token(user)
 
             domain = settings.HOST_URL
-            
+
             try:
                 message = render_to_string(
                     "activate.html",
@@ -245,12 +246,22 @@ class RegisterUser(views.APIView):
                 raise e
             logger.info(f"The message is: {message}, Email subject: {email_subject}")
 
-            email_message = EmailMessage(
+            text_message = f"""
+            Hi {user.first_name} {user.last_name},
+
+            Please click the link below to verify your account:
+
+            http://{domain}{reverse('activate', kwargs={'uidb64': uid, 'token': token})}
+            """
+
+            email_message = EmailMultiAlternatives(
                 email_subject,
-                message,
+                text_message,
                 settings.EMAIL_HOST_USER,
                 [data["email"]],
             )
+
+            email_message.attach_alternative(message, "text/html")
             logger.info(f"Email message: {email_message}")
 
             EmailThread(email_message).start()
