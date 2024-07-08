@@ -306,9 +306,9 @@ class PasswordResetRequestView(views.APIView):
         user = User.objects.filter(email=email).first()
         if user:
             token = default_token_generator.make_token(user)
-            uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
+            uid = force_str(urlsafe_base64_encode(force_bytes(user.pk)))
             reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
-            print(reset_link)
+            logger.info(f"Reset link: {reset_link}")
 
             context = {
                 "user": user,
@@ -317,11 +317,27 @@ class PasswordResetRequestView(views.APIView):
 
             message = render_to_string("password_reset.html", context)
             email_subject = "Password Reset Request"
-            email_message = EmailMessage(
-                email_subject, message, settings.EMAIL_HOST_USER, [email]
-            )
 
+            # Create a plain text message for email clients that don't support HTML
+            text_message = f"""
+            Hi {user.first_name},
+
+            Please click the link below to reset your password:
+
+            {reset_link}
+            """
+
+            email_message = EmailMultiAlternatives(
+                email_subject,
+                text_message,
+                settings.EMAIL_HOST_USER,
+                [email],
+            )
+            email_message.attach_alternative(message, "text/html")
+
+            # Send email in a thread
             EmailThread(email_message).start()
+            logger.info(f"Email sent: {email_message}")
 
             return Response(
                 {"detail": "Password reset email sent."}, status=status.HTTP_200_OK

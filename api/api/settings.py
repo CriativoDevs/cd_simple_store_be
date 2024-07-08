@@ -53,10 +53,10 @@ if ENVIRONMENT == "local":
 else:
     HOST_URL = "criativo.pythonanywhere.com"
 
-HOST_FE_URL = [
-    "http://localhost:3000/#",
-    "https://cdsimplestorefe-production.up.railway.app/",
-]
+if ENVIRONMENT == "local":
+    HOST_FE_URL = "http://localhost:3000/#"
+else:
+    HOST_FE_URL = "https://cdsimplestorefe-production.up.railway.app/"
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
