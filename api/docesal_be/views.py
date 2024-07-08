@@ -248,7 +248,7 @@ class RegisterUser(views.APIView):
             return Response(activation_message, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            message = {"detail": "User with this email already exists"}
+            message = {"detail": f"{str(e)}"}
             logger.error(f"Error creating user: {str(e)}")
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
