@@ -365,6 +365,7 @@ class PasswordResetConfirmView(views.APIView):
                 user = User.objects.get(pk=uid)
                 logger.info(f"User found: {user}")
             except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
+                uid = None
                 user = None
                 logger.error(f"Error decoding UID or user not found: {e}")
 
@@ -376,7 +377,9 @@ class PasswordResetConfirmView(views.APIView):
                     {"detail": "Password has been reset."}, status=status.HTTP_200_OK
                 )
             else:
-                logger.info(f"The UID {uid} or token {token} or user {user} is invalid.")
+                logger.info(
+                    f"The UID {uid} or token {token} or user {user} is invalid."
+                )
                 logger.error("Invalid token or user does not exist.")
                 return Response(
                     {"detail": "Invalid token or user does not exist."},
