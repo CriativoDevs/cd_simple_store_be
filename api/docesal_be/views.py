@@ -226,12 +226,15 @@ class RegisterUser(views.APIView):
             email_subject = "Activate your account"
             uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
             token = generate_token.make_token(user)
+
+            domain = settings.HOST_URL
+            
             try:
                 message = render_to_string(
                     "activate.html",
                     {
                         "user": user,
-                        "domain": settings.HOST_URL,
+                        "domain": domain,
                         "uid": uid,
                         "token": token,
                     },
@@ -265,13 +268,14 @@ class RegisterUser(views.APIView):
 
 
 class ActivateAccountView(View):
-
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
+            logger.info(f"User: {user}")
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
+            logger.info(f"User: {user}")
 
         if user is not None and generate_token.check_token(user, token):
             user.is_active = True
