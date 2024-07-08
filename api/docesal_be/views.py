@@ -29,7 +29,6 @@ from django.urls import reverse
 
 import jwt
 import time
-import traceback
 
 from .models import Product, Purchase
 from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
@@ -39,6 +38,7 @@ from .utils import (
     send_email_with_pdf,
     generate_purchase_pdf,
 )
+from smtplib import SMTPException
 
 import threading
 import stripe
@@ -117,7 +117,18 @@ class EmailThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        self.email_message.send()
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                self.email_message.send()
+                logger.info("Email sent successfully.")
+                break
+            except SMTPException as e:
+                logger.error(f"Attempt {attempt + 1} to send email failed: {e}")
+                if attempt + 1 == max_retries:
+                    logger.error("All attempts to send email failed.")
+                else:
+                    logger.info("Retrying...")
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
