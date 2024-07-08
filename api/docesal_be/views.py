@@ -14,7 +14,7 @@ from django.contrib.auth.hashers import make_password
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
+from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError, force_str
 from django.conf import settings
 from django.views.generic import View
 from django.db.models import Q
@@ -207,6 +207,11 @@ class RegisterUser(views.APIView):
     def post(self, request):
         data = request.data
         try:
+            if User.objects.filter(username=data["email"]).exists():
+                message = {"detail": "A user with this email already exists."}
+                logger.error(f"Error creating user: {message}")
+                return Response(message, status=status.HTTP_400_BAD_REQUEST)
+
             user = User.objects.create(
                 first_name=data["first_name"],
                 last_name=data["last_name"],
@@ -260,17 +265,20 @@ class RegisterUser(views.APIView):
 
 
 class ActivateAccountView(View):
+
     def get(self, request, uidb64, token):
         try:
-            uid = force_text(urlsafe_base64_decode(uidb64))
+            uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
+
         if user is not None and generate_token.check_token(user, token):
             user.is_active = True
             user.save()
-            message = {"details": "Account Activated Sucessfylly"}
-            return render(request, "activatesuccess.html", message)
+            return render(
+                request, "activatesuccess.html", {"domain": settings.HOST_URL}
+            )
         else:
             return render(request, "activatefail.html")
 
