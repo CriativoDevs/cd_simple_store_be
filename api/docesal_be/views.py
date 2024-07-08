@@ -214,24 +214,24 @@ class RegisterUser(views.APIView):
                 logger.error(f"Error creating user: {message}")
                 return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
-            with transaction.atomic():
-                user = User.objects.create(
-                    first_name=data["first_name"],
-                    last_name=data["last_name"],
-                    username=data["email"],
-                    email=data["email"],
-                    password=make_password(data["password"]),
-                    is_active=False,
-                )
+            user = User.objects.create(
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                username=data["email"],
+                email=data["email"],
+                password=make_password(data["password"]),
+                is_active=False,
+            )
 
-                logger.info(f"User created: {user}")
+            logger.info(f"User created: {user}")
 
-                email_subject = "Activate your account"
-                uid = force_str(urlsafe_base64_encode(force_bytes(user.pk)))
-                token = generate_token.make_token(user)
+            email_subject = "Activate your account"
+            uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
+            token = generate_token.make_token(user)
 
-                domain = settings.HOST_URL
+            domain = settings.HOST_URL
 
+            try:
                 message = render_to_string(
                     "activate.html",
                     {
@@ -241,29 +241,31 @@ class RegisterUser(views.APIView):
                         "token": token,
                     },
                 )
-                logger.info(
-                    f"The message is: {message}, Email subject: {email_subject}"
-                )
+            except Exception as e:
+                logger.error(f"Error rendering template: {str(e)}")
+                logger.error(traceback.format_exc())
+                raise e
+            logger.info(f"The message is: {message}, Email subject: {email_subject}")
 
-                # Create a plain text message for email clients that don't support HTML
-                text_message = f"""
-                Hi {user.first_name} {user.last_name},
+            text_message = f"""
+            Hi {user.first_name} {user.last_name},
 
-                Please click the link below to verify your account:
+            Please click the link below to verify your account:
 
-                http://{domain}{reverse('activate', kwargs={'uidb64': uid, 'token': token})}
-                """
+            http://{domain}{reverse('activate', kwargs={'uidb64': uid, 'token': token})}
+            """
 
-                email_message = EmailMultiAlternatives(
-                    email_subject,
-                    text_message,
-                    settings.EMAIL_HOST_USER,
-                    [data["email"]],
-                )
-                email_message.attach_alternative(message, "text/html")
-                logger.info(f"Email message: {email_message}")
+            email_message = EmailMultiAlternatives(
+                email_subject,
+                text_message,
+                settings.EMAIL_HOST_USER,
+                [data["email"]],
+            )
 
-                EmailThread(email_message).start()
+            email_message.attach_alternative(message, "text/html")
+            logger.info(f"Email message: {email_message}")
+
+            EmailThread(email_message).start()
 
             activation_message = {"detail": "Check your email for activation link"}
             logger.info(f"Activation message: {activation_message}")
