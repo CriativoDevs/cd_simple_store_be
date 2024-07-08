@@ -349,30 +349,25 @@ class PasswordResetRequestView(views.APIView):
 
 
 class PasswordResetConfirmView(views.APIView):
-    def post(self, request):
+    def post(self, request, uidb64, token):
         password = request.data.get("password")
-        token = request.data.get("token")
-        email = request.data.get("email")
-        if not token or not email:
-            return Response(
-                {"detail": f"{email or token} not received"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        user = User.objects.filter(email=email).first()
-        if user is None:
-            return Response(
-                {"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-        if default_token_generator.check_token(user, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
             user.set_password(password)
             user.save()
             return Response(
                 {"detail": "Password has been reset."}, status=status.HTTP_200_OK
             )
-        return Response(
-            {"detail": "Invalid token or user does not exist."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        else:
+            return Response(
+                {"detail": "Invalid token or user does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class CreatePaymentIntent(views.APIView):
