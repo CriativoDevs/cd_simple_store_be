@@ -216,6 +216,8 @@ class RegisterUser(views.APIView):
                 is_active=False,
             )
 
+            logger.info(f"User created: {user}")
+
             email_subject = "Activate your account"
             uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
             token = generate_token.make_token(user)
