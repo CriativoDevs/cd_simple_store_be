@@ -306,18 +306,13 @@ class PasswordResetRequestView(views.APIView):
         user = User.objects.filter(email=email).first()
         if user:
             token = default_token_generator.make_token(user)
-            uid = force_str(urlsafe_base64_encode(force_bytes(user.pk)))
-            reset_link = reverse(
-                "password_reset_confirm",
-                kwargs={"uidb64": uid, "token": token},
-                current_app=request.resolver_match.namespace,
-            )
-            full_reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
-            logger.info(f"Reset link: {full_reset_link}")
+            uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
+            reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
+            logger.info(f"Reset link: {reset_link}")
 
             context = {
                 "user": user,
-                "link": full_reset_link,
+                "link": reset_link,
             }
 
             message = render_to_string("password_reset.html", context)
@@ -329,7 +324,7 @@ class PasswordResetRequestView(views.APIView):
 
             Please click the link below to reset your password:
 
-            {full_reset_link}
+            {reset_link}
             """
 
             email_message = EmailMultiAlternatives(
@@ -356,6 +351,8 @@ class PasswordResetRequestView(views.APIView):
 class PasswordResetConfirmView(views.APIView):
     def post(self, request, uidb64, token):
         try:
+            logger.info(f"Received uidb64: {uidb64} and token: {token}")
+
             password = request.data.get("password")
             if not password:
                 raise ValueError("Password not provided")
