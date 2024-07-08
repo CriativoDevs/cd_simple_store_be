@@ -228,6 +228,7 @@ class RegisterUser(views.APIView):
                     "token": token,
                 },
             )
+            logger.info(f"The message is: {message}, Email subject: {email_subject}")
 
             email_message = EmailMessage(
                 email_subject,
@@ -235,15 +236,18 @@ class RegisterUser(views.APIView):
                 settings.EMAIL_HOST_USER,
                 [data["email"]],
             )
+            logger.info(f"Email message: {email_message}")
 
             EmailThread(email_message).start()
 
             activation_message = {"detail": "Check your email for activation link"}
+            logger.info(f"Activation message: {activation_message}")
 
             return Response(activation_message, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             message = {"detail": "User with this email already exists"}
+            logger.error(f"Error creating user: {str(e)}")
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
 
