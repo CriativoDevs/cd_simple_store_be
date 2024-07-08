@@ -22,7 +22,7 @@ from django.contrib.auth.tokens import default_token_generator
 
 import jwt
 import time
-import datetime
+import traceback
 
 from .models import Product, Purchase
 from .serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
@@ -221,15 +221,20 @@ class RegisterUser(views.APIView):
             email_subject = "Activate your account"
             uid = force_text(urlsafe_base64_encode(force_bytes(user.pk)))
             token = generate_token.make_token(user)
-            message = render_to_string(
-                "activate.html",
-                {
-                    "user": user,
-                    "domain": settings.HOST_URL,
-                    "uid": uid,
-                    "token": token,
-                },
-            )
+            try:
+                message = render_to_string(
+                    "activate.html",
+                    {
+                        "user": user,
+                        "domain": settings.HOST_URL,
+                        "uid": uid,
+                        "token": token,
+                    },
+                )
+            except Exception as e:
+                logger.error(f"Error rendering template: {str(e)}")
+                logger.error(traceback.format_exc())
+                raise e
             logger.info(f"The message is: {message}, Email subject: {email_subject}")
 
             email_message = EmailMessage(
@@ -250,6 +255,7 @@ class RegisterUser(views.APIView):
         except Exception as e:
             message = {"detail": f"{str(e)}"}
             logger.error(f"Error creating user: {str(e)}")
+            logger.error(traceback.format_exc())
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
 
