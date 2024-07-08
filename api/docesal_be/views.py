@@ -266,9 +266,7 @@ class RegisterUser(views.APIView):
                     [data["email"]],
                 )
                 email_message.attach_alternative(message, "text/html")
-
-                # Send email in a thread
-                EmailThread(email_message).start()
+                email_message.send()
                 logger.info(f"Email sent: {email_message}")
 
             activation_message = {"detail": "Check your email for activation link"}
