@@ -360,44 +360,59 @@ class PasswordResetRequestView(views.APIView):
 
 
 class PasswordResetConfirmView(views.APIView):
-    def post(self, request, uidb64, token):
+
+    def post(self, request):
+        email = request.data.get("email")
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
         try:
-            logger.info(f"Received uidb64: {uidb64} and token: {token}")
+            with transaction.atomic():
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
+                logger.info(f"Reset link: {reset_link}")
 
-            password = request.data.get("password")
-            if not password:
-                raise ValueError("Password not provided")
+                context = {
+                    "user": user,
+                    "link": reset_link,
+                }
 
-            try:
-                uid = force_str(urlsafe_base64_decode(uidb64))
-                user = User.objects.get(pk=uid)
-                logger.info(f"User found: {user}")
-            except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
-                uid = None
-                user = None
-                logger.error(f"Error decoding UID or user not found: {e}")
+                message = render_to_string("password_reset.html", context)
+                email_subject = "Password Reset Request"
 
-            if user is not None and default_token_generator.check_token(user, token):
-                user.set_password(password)
-                user.save()
-                logger.info(f"Password has been reset for user: {user}")
-                return Response(
-                    {"detail": "Password has been reset."}, status=status.HTTP_200_OK
+                # Create a plain text message for email clients that don't support HTML
+                text_message = f"""
+                Hi {user.first_name},
+
+                Please click the link below to reset your password:
+
+                {reset_link}
+                """
+
+                email_message = EmailMultiAlternatives(
+                    email_subject,
+                    text_message,
+                    settings.EMAIL_HOST_USER,
+                    [email],
                 )
-            else:
-                logger.info(
-                    f"The UID {uid} or token {token} or user {user} is invalid."
-                )
-                logger.error("Invalid token or user does not exist.")
-                return Response(
-                    {"detail": "Invalid token or user does not exist."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                email_message.attach_alternative(message, "text/html")
+                email_message.send()
+
+                logger.info(f"Email sent: {email_message}")
+
+            return Response(
+                {"detail": "Password reset email sent."}, status=status.HTTP_200_OK
+            )
 
         except Exception as e:
-            logger.error(f"Error in password reset confirmation: {e}")
+            logger.error(f"Error during password reset email process: {str(e)}")
             return Response(
-                {"detail": f"Error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "An error occurred. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
