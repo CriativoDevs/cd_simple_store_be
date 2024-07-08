@@ -306,7 +306,7 @@ class PasswordResetRequestView(views.APIView):
         user = User.objects.filter(email=email).first()
         if user:
             token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk)).decode()
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
             reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
             logger.info(f"Reset link: {reset_link}")
 
