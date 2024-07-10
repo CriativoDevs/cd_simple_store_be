@@ -12,7 +12,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives, EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import (
     force_bytes,
@@ -194,19 +194,27 @@ class ProductList(generics.ListAPIView):
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter]
     pagination_class = pagination.PageNumberPagination
-    search_fields = ["product_name", "product_brand", "product_description"]
+    search_fields = [
+        "product_name",
+        "product_brand",
+        "product_description",
+        "product_category",
+        "product_price",
+    ]
     permission_classes = []
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_term = self.request.query_params.get("search", None)
-        if search_term:
-            queryset = queryset.filter(
-                Q(product_name__icontains=search_term)
-                | Q(product_brand__icontains=search_term)
-                | Q(product_description__icontains=search_term)
-            )
-        return queryset
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     search_term = self.request.query_params.get("search", None)
+    #     if search_term:
+    #         queryset = queryset.filter(
+    #             Q(product_name__icontains=search_term)
+    #             | Q(product_brand__icontains=search_term)
+    #             | Q(product_description__icontains=search_term)
+    #             | Q(product_category__icontains=search_term)
+    #             | Q(product_price__icontains=search_term)
+    #         )
+    #     return queryset
 
 
 class ProductDetail(generics.RetrieveAPIView):
