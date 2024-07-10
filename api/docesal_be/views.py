@@ -203,18 +203,18 @@ class ProductList(generics.ListAPIView):
     ]
     permission_classes = []
 
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-    #     search_term = self.request.query_params.get("search", None)
-    #     if search_term:
-    #         queryset = queryset.filter(
-    #             Q(product_name__icontains=search_term)
-    #             | Q(product_brand__icontains=search_term)
-    #             | Q(product_description__icontains=search_term)
-    #             | Q(product_category__icontains=search_term)
-    #             | Q(product_price__icontains=search_term)
-    #         )
-    #     return queryset
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.query_params.get("search", None)
+        if search_term:
+            queryset = queryset.filter(
+                Q(product_name__icontains=search_term)
+                | Q(product_brand__icontains=search_term)
+                | Q(product_description__icontains=search_term)
+                | Q(product_category__icontains=search_term)
+                | Q(product_price__icontains=search_term)
+            )
+        return queryset
 
 
 class ProductDetail(generics.RetrieveAPIView):
