@@ -130,10 +130,3 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
     except Exception as e:
         logger.error("Error sending email: %s", e)
 
-
-# Ensure the settings are loaded and correct
-logger.info("EMAIL_HOST: %s", settings.EMAIL_HOST)
-logger.info("EMAIL_PORT: %d", settings.EMAIL_PORT)
-logger.info("EMAIL_USE_SSL: %s", settings.EMAIL_USE_SSL)
-logger.info("EMAIL_HOST_USER: %s", settings.EMAIL_HOST_USER)
-logger.info("EMAIL_HOST_PASSWORD: %s", settings.EMAIL_HOST_PASSWORD)
