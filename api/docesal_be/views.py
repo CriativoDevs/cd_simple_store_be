@@ -121,14 +121,14 @@ class EmailThread(threading.Thread):
         for attempt in range(max_retries):
             try:
                 self.email_message.send()
-                logger.info("Email sent successfully.")
+                logger.error("Email sent successfully.")
                 break
             except SMTPException as e:
                 logger.error(f"Attempt {attempt + 1} to send email failed: {e}")
                 if attempt + 1 == max_retries:
                     logger.error("All attempts to send email failed.")
                 else:
-                    logger.info("Retrying...")
+                    logger.error("Retrying...")
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -207,7 +207,7 @@ class ProductList(generics.ListAPIView):
         queryset = super().get_queryset()
         search_term = self.request.query_params.get("search", None)
         if search_term:
-            logger.info(f"Search term: {search_term}")
+            logger.error(f"Search term: {search_term}")
             queryset = queryset.filter(
                 Q(product_name__icontains=search_term)
                 | Q(product_brand__icontains=search_term)
@@ -215,9 +215,9 @@ class ProductList(generics.ListAPIView):
                 | Q(product_category__icontains=search_term)
                 | Q(product_price__icontains=search_term)
             )
-            logger.info(f"Filtered queryset: {queryset}")
+            logger.error(f"Filtered queryset: {queryset}")
 
-        logger.info(f"Queryset: {queryset}")
+        logger.error(f"Queryset: {queryset}")
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -270,7 +270,7 @@ class RegisterUser(views.APIView):
                     is_active=False,
                 )
 
-                logger.info(f"User created: {user}")
+                logger.error(f"User created: {user}")
 
                 email_subject = "Activate your account"
                 uid = force_str(urlsafe_base64_encode(force_bytes(user.pk)))
@@ -287,7 +287,7 @@ class RegisterUser(views.APIView):
                         "token": token,
                     },
                 )
-                logger.info(
+                logger.error(
                     f"The message is: {message}, Email subject: {email_subject}"
                 )
 
@@ -308,10 +308,10 @@ class RegisterUser(views.APIView):
                 )
                 email_message.attach_alternative(message, "text/html")
                 email_message.send()
-                logger.info(f"Email sent: {email_message}")
+                logger.error(f"Email sent: {email_message}")
 
             activation_message = {"detail": "Check your email for activation link"}
-            logger.info(f"Activation message: {activation_message}")
+            logger.error(f"Activation message: {activation_message}")
 
             return Response(activation_message, status=status.HTTP_201_CREATED)
 
@@ -326,10 +326,10 @@ class ActivateAccountView(View):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
-            logger.info(f"User: {user}")
+            logger.error(f"User: {user}")
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
-            logger.info(f"User: {user}")
+            logger.error(f"User: {user}")
 
         if user is not None and generate_token.check_token(user, token):
             user.is_active = True
@@ -355,7 +355,7 @@ class PasswordResetRequestView(views.APIView):
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 reset_link = f"{settings.HOST_FE_URL}/reset-password/{uid}/{token}"
-                logger.info(f"Reset link: {reset_link}")
+                logger.error(f"Reset link: {reset_link}")
 
                 context = {
                     "user": user,
@@ -382,7 +382,7 @@ class PasswordResetRequestView(views.APIView):
                 )
                 email_message.attach_alternative(message, "text/html")
                 email_message.send()
-                logger.info(f"Email sent: {email_message}")
+                logger.error(f"Email sent: {email_message}")
 
             return Response(
                 {"detail": "Password reset email sent."}, status=status.HTTP_200_OK
@@ -399,7 +399,7 @@ class PasswordResetRequestView(views.APIView):
 class PasswordResetConfirmView(views.APIView):
     def post(self, request, uidb64, token):
         try:
-            logger.info(f"Received uidb64: {uidb64} and token: {token}")
+            logger.error(f"Received uidb64: {uidb64} and token: {token}")
 
             password = request.data.get("password")
             if not password:
@@ -408,7 +408,7 @@ class PasswordResetConfirmView(views.APIView):
             try:
                 uid = force_str(urlsafe_base64_decode(uidb64))
                 user = User.objects.get(pk=uid)
-                logger.info(f"User found: {user}")
+                logger.error(f"User found: {user}")
             except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
                 uid = None
                 user = None
@@ -417,12 +417,12 @@ class PasswordResetConfirmView(views.APIView):
             if user is not None and default_token_generator.check_token(user, token):
                 user.set_password(password)
                 user.save()
-                logger.info(f"Password has been reset for user: {user}")
+                logger.error(f"Password has been reset for user: {user}")
                 return Response(
                     {"detail": "Password has been reset."}, status=status.HTTP_200_OK
                 )
             else:
-                logger.info(
+                logger.error(
                     f"The UID {uid} or token {token} or user {user} is invalid."
                 )
                 logger.error("Invalid token or user does not exist.")
@@ -492,7 +492,7 @@ class CreatePaymentIntent(views.APIView):
 
                 # Send email with PDF
                 send_email_with_pdf(user.email, subject, body, pdf_buffer)
-                logger.info("Email sent to {}".format(user.email))
+                logger.error("Email sent to {}".format(user.email))
             except Exception as e:
                 logger.error(f"Error sending email: {str(e)}")
                 return Response(

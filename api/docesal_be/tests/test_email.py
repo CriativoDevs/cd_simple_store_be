@@ -23,7 +23,7 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 def send_test_email():
     try:
-        logger.info("Setting up email connection")
+        logger.error("Setting up email connection")
 
         if EMAIL_USE_SSL:
             server = smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT)
@@ -49,12 +49,12 @@ def send_test_email():
         )
         msg.attach(attachment)
 
-        logger.info(f"Attempting to send test email to ipizette@icloud.com")
+        logger.error(f"Attempting to send test email to ipizette@icloud.com")
 
         server.send_message(msg)
 
         server.quit()
-        logger.info("Email successfully sent and connection closed")
+        logger.error("Email successfully sent and connection closed")
     except Exception as e:
         logger.error(f"Failed to send test email: {str(e)}")
 

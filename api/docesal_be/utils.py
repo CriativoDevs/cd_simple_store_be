@@ -98,7 +98,7 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
                 server.ehlo()
 
         server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-        logger.info("Email connection established")
+        logger.error("Email connection established")
 
         # Create the email
         msg = MIMEMultipart()
@@ -110,8 +110,8 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
         # Ensure pdf_buffer is read as bytes
         try:
             pdf_bytes = pdf_buffer.getvalue()
-            logger.info(f"PDF buffer type: {type(pdf_bytes)}")
-            logger.info(f"PDF buffer length: {len(pdf_bytes)}")
+            logger.error(f"PDF buffer type: {type(pdf_bytes)}")
+            logger.error(f"PDF buffer length: {len(pdf_bytes)}")
         except Exception as e:
             logger.error("Error converting PDF buffer to bytes: %s", e)
             raise
@@ -119,14 +119,13 @@ def send_email_with_pdf(to_email, subject, body, pdf_buffer):
         attach = MIMEApplication(pdf_bytes, _subtype="pdf")
         attach.add_header("Content-Disposition", "attachment", filename="receipt.pdf")
         msg.attach(attach)
-        logger.info("PDF attached successfully")
+        logger.error("PDF attached successfully")
 
         # Send the email
         server.sendmail(settings.EMAIL_HOST_USER, to_email, msg.as_string())
-        logger.info("Email sent successfully")
+        logger.error("Email sent successfully")
         server.quit()
     except smtplib.SMTPException as e:
         logger.error("SMTP error occurred: %s", e)
     except Exception as e:
         logger.error("Error sending email: %s", e)
-
