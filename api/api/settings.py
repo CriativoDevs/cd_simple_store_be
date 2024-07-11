@@ -98,6 +98,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "docesal_be.middleware.LogAccessMiddleware",
 ]
 
 # REST_FRAMEWORK

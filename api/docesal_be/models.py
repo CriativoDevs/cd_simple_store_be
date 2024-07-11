@@ -45,3 +45,12 @@ class Purchase(models.Model):
 
     def __str__(self):
         return f"{self.user.username} bought {self.product.product_name}"
+
+
+class AccessLog(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Access at {self.timestamp} from {self.ip_address}"
