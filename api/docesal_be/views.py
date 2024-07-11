@@ -190,7 +190,7 @@ def getRoutes(request):
 
 
 class ProductList(generics.ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by("_id")  # Ensure queryset is ordered
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter]
     pagination_class = pagination.PageNumberPagination
@@ -214,7 +214,9 @@ class ProductList(generics.ListAPIView):
                 | Q(product_description__icontains=search_term)
                 | Q(product_category__icontains=search_term)
                 | Q(product_price__icontains=search_term)
-            )
+            ).order_by(
+                "_id"
+            )  # Ensure filtered queryset is ordered
             logger.error(f"Filtered queryset: {queryset}")
 
         logger.error(f"Queryset: {queryset}")

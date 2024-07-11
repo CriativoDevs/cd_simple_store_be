@@ -1,4 +1,7 @@
+from django.urls import path
+from django.template.response import TemplateResponse
 from django.contrib import admin
+
 from .models import Product, UserProfile, Purchase, AccessLog
 
 
@@ -7,13 +10,8 @@ class PurchaseAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at",)
 
 
-@admin.register(AccessLog)
-class AccessLogAdmin(admin.ModelAdmin):
-    list_display = ("timestamp", "ip_address", "user_agent")
-    list_filter = ("timestamp", "ip_address")
-
-
 # Register your models here.
+admin.site.register(AccessLog)
 admin.site.register(Product)
 admin.site.register(UserProfile)
 admin.site.register(Purchase, PurchaseAdmin)
