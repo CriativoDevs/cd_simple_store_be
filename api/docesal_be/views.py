@@ -207,6 +207,7 @@ class ProductList(generics.ListAPIView):
         queryset = super().get_queryset()
         search_term = self.request.query_params.get("search", None)
         if search_term:
+            logger.info(f"Search term: {search_term}")
             queryset = queryset.filter(
                 Q(product_name__icontains=search_term)
                 | Q(product_brand__icontains=search_term)
@@ -214,6 +215,9 @@ class ProductList(generics.ListAPIView):
                 | Q(product_category__icontains=search_term)
                 | Q(product_price__icontains=search_term)
             )
+            logger.info(f"Filtered queryset: {queryset}")
+
+        logger.info(f"Queryset: {queryset}")
         return queryset
 
 
