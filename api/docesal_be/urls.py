@@ -5,6 +5,7 @@ from django.urls import path
 urlpatterns = [
     path("", views.getRoutes, name="getRoutes"),
     path("products/", views.ProductList.as_view(), name="product-list"),
+    path("products/filters/", views.FilterOptions.as_view(), name="product-filters"),
     path("product/<int:pk>/", views.ProductDetail.as_view(), name="product-detail"),
     path(
         "check-purchase-status/<int:product_id>/",

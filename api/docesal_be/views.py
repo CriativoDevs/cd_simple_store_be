@@ -214,9 +214,27 @@ class ProductList(generics.ListAPIView):
                 | Q(product_description__icontains=search_term)
                 | Q(product_category__icontains=search_term)
                 | Q(product_price__icontains=search_term)
-            ).order_by(
-                "_id"
-            )  # Ensure filtered queryset is ordered
+            ).order_by("_id")
+
+        # Handle additional filters
+        min_price = self.request.query_params.get("min_price")
+        max_price = self.request.query_params.get("max_price")
+        if min_price and max_price:
+            queryset = queryset.filter(price__gte=min_price, price__lte=max_price)
+
+        brand = self.request.query_params.get("brand")
+        if brand:
+            queryset = queryset.filter(brand__iexact=brand)
+
+        category = self.request.query_params.get("category")
+        if category:
+            queryset = queryset.filter(category__iexact=category)
+
+        order_by = self.request.query_params.get("order_by")
+        if order_by == "expensive":
+            queryset = queryset.order_by("-price")
+        elif order_by == "cheap":
+            queryset = queryset.order_by("price")
             logger.error(f"Filtered queryset: {queryset}")
 
         logger.error(f"Queryset: {queryset}")
@@ -237,6 +255,20 @@ class ProductList(generics.ListAPIView):
                     self.paginator.get_previous_link() if self.paginator else None
                 ),
                 "results": serializer.data,
+            }
+        )
+
+
+class FilterOptions(views.APIView):
+    def get(self, request):
+        brands = Product.objects.values_list("product_brand", flat=True).distinct()
+        categories = Product.objects.values_list(
+            "product_category", flat=True
+        ).distinct()
+        return Response(
+            {
+                "brands": brands,
+                "categories": categories,
             }
         )
 
