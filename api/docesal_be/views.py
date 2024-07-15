@@ -224,6 +224,7 @@ class ProductList(generics.ListAPIView):
                 product_price__gte=min_price, product_price__lte=max_price
             )
             print(f"Filtered price queryset: {queryset}")
+            print(f"Filtered max_price queryset: {max_price}")
 
         brand = self.request.query_params.get("brands")
         if brand:
