@@ -190,7 +190,7 @@ def getRoutes(request):
 
 
 class ProductList(generics.ListAPIView):
-    queryset = Product.objects.all().order_by("_id")  # Ensure queryset is ordered
+    queryset = Product.objects.all().order_by("-_id")
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter]
     pagination_class = pagination.PageNumberPagination
@@ -220,22 +220,27 @@ class ProductList(generics.ListAPIView):
         min_price = self.request.query_params.get("min_price")
         max_price = self.request.query_params.get("max_price")
         if min_price and max_price:
-            queryset = queryset.filter(price__gte=min_price, price__lte=max_price)
+            queryset = queryset.filter(
+                product_price__gte=min_price, product_price__lte=max_price
+            )
+            print(f"Filtered price queryset: {queryset}")
 
         brand = self.request.query_params.get("brand")
         if brand:
-            queryset = queryset.filter(brand__iexact=brand)
+            queryset = queryset.filter(product_brand__iexact=brand)
+            print(f"Filtered brand queryset: {queryset}")
 
         category = self.request.query_params.get("category")
         if category:
-            queryset = queryset.filter(category__iexact=category)
+            queryset = queryset.filter(product_category__iexact=category)
+            print(f"Filtered category queryset: {queryset}")
 
         order_by = self.request.query_params.get("order_by")
         if order_by == "expensive":
-            queryset = queryset.order_by("-price")
+            queryset = queryset.order_by("-product_price")
         elif order_by == "cheap":
-            queryset = queryset.order_by("price")
-            logger.error(f"Filtered queryset: {queryset}")
+            queryset = queryset.order_by("product_price")
+            print(f"Filtered order_by queryset: {queryset}")
 
         logger.error(f"Queryset: {queryset}")
         return queryset
