@@ -225,7 +225,7 @@ class ProductList(generics.ListAPIView):
             )
             print(f"Filtered price queryset: {queryset}")
 
-        brand = self.request.query_params.get("brand")
+        brand = self.request.query_params.get("brands")
         if brand:
             queryset = queryset.filter(product_brand__iexact=brand)
             print(f"Filtered brand queryset: {queryset}")
@@ -242,7 +242,7 @@ class ProductList(generics.ListAPIView):
             queryset = queryset.order_by("product_price")
             print(f"Filtered order_by queryset: {queryset}")
 
-        logger.error(f"Queryset: {queryset}")
+        # logger.error(f"Queryset: {queryset}")
         return queryset
 
     def list(self, request, *args, **kwargs):
