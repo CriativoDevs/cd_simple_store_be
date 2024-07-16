@@ -503,6 +503,18 @@ class CreatePaymentIntent(views.APIView):
             for item in cart_items:
                 try:
                     product = get_object_or_404(Product, _id=item["product"])
+
+                    # Check if the stock is sufficient
+                    if product.product_stock_count < item["qty"]:
+                        return Response(
+                            {"error": f"Not enough stock for {product.name}"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
+                    # Subtract the quantity from the product's stock count
+                    product.product_stock_count -= item["qty"]
+                    product.save()
+
                     Purchase.objects.create(
                         user=user,
                         product=product,
